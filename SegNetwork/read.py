@@ -19,13 +19,26 @@ def convert_to_one_hot(seg):
 
     outs[34][seg==-1] = 1
 
+    out = np.zeros((4,shape[0],shape[1]), seg.dtype)
+
+    out[3] = outs[22]
+    out[2] = outs[21] + outs[20]
+    out[1] = outs[15] + outs[14] + outs[13] + outs[12] + outs[11] + outs[10]
+
+    for i in range(10):
+        out[0] = out[0] + outs[i]
+    for i in range(16,20):
+        out[0] = out[0] + outs[i]
+    for i in range(23,35):
+        out[0] = out[0] + outs[i]
+
 
     #
     # vals = np.unique(seg)
     # res = np.zeros([len(vals)] + list(seg.shape), seg.dtype)
     # for c in range(len(vals)):
     #     res[c][seg == c] = 1
-    return outs
+    return out
 
 Path_img = './data/image/'
 Path_lab = './data/label/'
