@@ -103,7 +103,7 @@ class RCCmodule(nn.Module):
             nn.Conv2d(640, 128, kernel_size=3, padding=1, dilation=1, bias=False),
             nn.GroupNorm(4, 128), nn.ReLU(inplace=False),
             nn.Dropout2d(0.1),
-            nn.Conv2d(128, 35, kernel_size=1, stride=1, padding=0, bias=True)
+            nn.Conv2d(128, 4, kernel_size=1, stride=1, padding=0, bias=True)
         )
 
     def forward(self,x,recurrence=2):
@@ -112,6 +112,7 @@ class RCCmodule(nn.Module):
             output = self.cca(output)
         output = self.convb(output)
         output = self.bottleneck(torch.cat([x, output], 1))
+        output = F.softmax(output, dim=1)
         return output
     
 class SegNetwork(nn.module):
