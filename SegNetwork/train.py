@@ -8,6 +8,7 @@ from torch.autograd import Variable
 import numpy as np
 
 import torch.nn.functional as F
+import skimage.io as io
 
 import os
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -26,11 +27,11 @@ dataloder = Datas.DataLoader(dataset=data,batch_size=1,shuffle=True)
 fusenet = Network.SegNetwork().to(device)
 opt = torch.optim.Adam(fusenet.parameters(),lr=3e-4, betas=(0.9, 0.999), weight_decay=1e-5)
 #######
-# pretrained_dict = torch.load('./pkl/net_epoch_19-fuseNetwork.pkl')
-# model_dict = fusenet.state_dict()
-# pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
-# model_dict.update(pretrained_dict)
-# fusenet.load_state_dict(model_dict)
+pretrained_dict = torch.load('./pkl/net_epoch_1-fuseNetwork.pkl')
+model_dict = fusenet.state_dict()
+pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+model_dict.update(pretrained_dict)
+fusenet.load_state_dict(model_dict)
 
 
 ###
@@ -51,6 +52,8 @@ fake_B_buffer = criterion.ReplayBuffer()
 for epoch in range(200):
     meansegdice = 0
     for step, (img, label) in enumerate(dataloder):
+        # print(img.shape)
+        # print(label.shape)
 
         img = img.to(device).float()
         label = label.to(device).float()
@@ -60,8 +63,25 @@ for epoch in range(200):
 
         segresult = fusenet(img)
 
+        # print(segresult.shape)
+        # print(label.shape)
         lossseg_ed_es = criterion_dice1(segresult, label)
         lossseg_ce = criterion_CE(segresult, label)
+
+        if step%100==0:
+
+            segresulti = segresult[0,0,:,:,]*0+segresult[0,1,:,:,]*1+segresult[0,2,:,:,]*2+segresult[0,3,:,:,]*3
+            io.imsave('./seg'+str(step)+'.jpg', segresulti.data.cpu().numpy())
+
+            segresulti = label[0, 0, :, :, ] * 0 + label[0, 1, :, :, ] * 1 + label[0, 2, :,
+                                                                                     :, ] * 2 + label[0, 3, :,
+                                                                                                :, ] * 3
+            io.imsave('./label' + str(step) + '.jpg', segresulti.data.cpu().numpy())
+
+            segresulti = img[0, :, :,:, ]
+            segresulti = segresulti.data.cpu().numpy()
+            segresulti = np.transpose(segresulti, (1, 2, 0))
+            io.imsave('./img' + str(step) + '.jpg', segresulti)
 
         loss = lossseg_ed_es + lossseg_ce
         opt.zero_grad()
