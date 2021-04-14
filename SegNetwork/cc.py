@@ -2,10 +2,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import Softmax
+import os
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
+device_ids = [0]
 
 def INF(B, H, W):
-    return -torch.diag(torch.tensor(float("inf")).cuda(1).repeat(H), 0).unsqueeze(0).repeat(B * W, 1, 1)
+    return -torch.diag(torch.tensor(float("inf")).cuda(0).repeat(H), 0).unsqueeze(0).repeat(B * W, 1, 1)
 
 
 class CC_module(nn.Module):
@@ -53,6 +57,6 @@ class CC_module(nn.Module):
 
 if __name__ == '__main__':
     model = CC_module(2048)
-    x = torch.randn(4, 2048, 41, 41)
+    x = torch.randn(4, 2048, 41, 41).to(device)
     out = model(x)
-    print(out.shape)
+    # print(out.shape)
