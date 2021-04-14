@@ -27,7 +27,7 @@ dataloder = Datas.DataLoader(dataset=data,batch_size=1,shuffle=True)
 fusenet = Network.SegNetwork().to(device)
 opt = torch.optim.Adam(fusenet.parameters(),lr=3e-4, betas=(0.9, 0.999), weight_decay=1e-5)
 #######
-pretrained_dict = torch.load('./pkl/net_epoch_1-fuseNetwork.pkl')
+pretrained_dict = torch.load('./pkl/net_epoch_11-fuseNetwork.pkl')
 model_dict = fusenet.state_dict()
 pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
 model_dict.update(pretrained_dict)
