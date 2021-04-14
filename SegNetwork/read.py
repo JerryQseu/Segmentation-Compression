@@ -39,6 +39,26 @@ def convert_to_one_hot(seg):
     # for c in range(len(vals)):
     #     res[c][seg == c] = 1
     return out
+def convert_to_one_hot1(seg):
+    vals = np.unique(seg)
+    res = np.zeros([len(vals)] + list(seg.shape), seg.dtype)
+    for c in range(len(vals)):
+        res[c][seg == c] = 1
+    return res
+
+def resize_label(image):
+    edsize = image.shape
+
+    # tem = convert_to_one_hot1(image)
+    # vals = np.unique(image)
+
+    result = np.zeros((edsize[0],edsize[1]//2,edsize[2]//2), image.dtype)
+    for i in range(len(image)):
+        result[i,:,:] =resize(image[i].astype(float), ( edsize[1] // 2, edsize[2] // 2), order=1, mode='edge')[None]
+    # image = vals[np.vstack(result).argmax(0)]
+
+    return result
+
 
 Path_img = './data/image/'
 Path_lab = './data/label/'
@@ -71,11 +91,20 @@ class Data(Dataset.Dataset):
 
         image = io.imread(self.img[index]).astype(float)
         image = image.transpose(2, 0, 1)
-        labelname = Path_lab + img[0][-36:-15] + 'gtCoarse_labelIds.png'
+        ins = img[index].rfind('/')
+        # print(img[index])
+        # print(img[index][ins:-15] )
+        labelname = Path_lab + img[index][ins:-15] + 'gtFine_labelIds.png'
         label = io.imread(labelname)
         label_one = convert_to_one_hot(label)
 
+        edsize = image.shape
+
+        image = resize(image, (edsize[0], edsize[1]//2, edsize[2] // 2), order=3,
+                       mode='edge').astype(np.float32)
+
         imagenorm = normor(image)
+        label_one = resize_label(label_one)
 
         return imagenorm,label_one
 
